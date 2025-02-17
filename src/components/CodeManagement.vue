@@ -3,7 +3,25 @@
       <h2>코드관리</h2>
       
       <div class="code-groups">
-        <h3>코드그룹 <button class="action-button add-button" @click="addGroup">+추가</button> <button class="action-button remove-button" @click="removeGroup">-삭제</button></h3>
+        <h3>코드그룹 
+          <button class="action-button add-button" @click="addGroup">+추가</button> 
+          <button class="action-button remove-button" @click="removeGroup">-삭제</button>
+        </h3>
+        
+        <!-- 그룹 입력 폼 추가 -->
+        <div v-if="showGroupForm" class="group-form">
+          <div class="form-group">
+            <label for="newGroupName">그룹명</label>
+            <input id="newGroupName" v-model="newGroup.groupName" />
+          </div>
+          <div class="form-group">
+            <label for="newGroupId">그룹ID</label>
+            <input id="newGroupId" v-model="newGroup.groupId" />
+          </div>
+          <button class="save-button" @click="saveGroup">그룹저장</button>
+          <button class="cancel-button" @click="cancelGroup">취소</button>
+        </div>
+
         <table class="group-table">
           <thead>
             <tr>
@@ -118,6 +136,11 @@
   const selectedGroupIndex = ref(null);
   const showPopup = ref(false);
   const selectedGroup = ref(null);
+  const showGroupForm = ref(false);
+  const newGroup = ref({
+    groupName: '',
+    groupId: ''
+  });
 
   onMounted(async () => {
     try {
@@ -131,7 +154,7 @@
   });
 
   const addGroup = () => {
-    codeGroups.value.push({ name: '', id: '' });
+    showGroupForm.value = true;
   };
 
   const removeGroup = () => {
@@ -213,6 +236,36 @@
   const closePopup = () => {
     showPopup.value = false;
     selectedGroup.value = null;
+  };
+
+  const cancelGroup = () => {
+    showGroupForm.value = false;
+    newGroup.value = {
+      groupName: '',
+      groupId: ''
+    };
+  };
+
+  const saveGroup = async () => {
+    if (!newGroup.value.groupName || !newGroup.value.groupId) {
+      alert('그룹명과 그룹ID를 모두 입력해주세요.');
+      return;
+    }
+
+    try {
+      await axios.post('/api/codegroups', newGroup.value);
+      
+      // 저장 성공 후 목록 새로고침
+      const response = await axios.get('/api/codegroups');
+      codeGroups.value = response.data;
+      
+      // 입력 폼 초기화 및 숨기기
+      cancelGroup();
+      alert('그룹이 저장되었습니다.');
+    } catch (error) {
+      console.error('코드 그룹 저장 중 오류 발생:', error);
+      alert('그룹 저장에 실패했습니다.');
+    }
   };
   </script>
   
@@ -520,6 +573,30 @@
     padding: 8px;
     width: 100%;
     border-radius: 4px;
+  }
+
+  .group-form {
+    margin: 15px 0;
+    padding: 15px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+  }
+
+  .cancel-button {
+    background-color: #6c757d;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    margin-left: 10px;
+    transition: background-color 0.3s;
+  }
+
+  .cancel-button:hover {
+    background-color: #5a6268;
   }
   </style>
   
